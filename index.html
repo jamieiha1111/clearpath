@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClearPath — Internal Deal Review Platform</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0a1628;--slate:#1e3a5f;
+  --accent:#1a7fbf;--accent2:#0fa3b1;
+  --light:#e8f4fd;--lighter:#f4f9fd;
+  --text:#0a1628;--text2:#3a5070;--text3:#6b8299;
+  --border:rgba(10,22,40,0.11);
+  --success:#1a7a3e;--warning:#b07c00;--danger:#b02a2a;
+  --r:8px;--rl:13px;
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:var(--text);background:#eef0f3;min-height:100vh;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* TOPBAR */
+.topbar{background:var(--navy);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{font-size:19px;font-weight:700;color:#fff;letter-spacing:.3px;flex-shrink:0}
+.logo span{color:var(--accent2)}
+.badge{font-size:10px;padding:3px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;white-space:nowrap}
+.badge-int{background:rgba(255,255,255,.1);color:rgba(255,255,255,.45)}
+.badge-demo{background:rgba(15,163,177,.18);color:var(--accent2)}
+.user-pill{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.45);font-size:12px;flex-shrink:0}
+.avatar{width:27px;height:27px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0}
+.user-name{white-space:nowrap}
+
+/* PAGE */
+.page{max-width:1020px;margin:28px auto;padding:0 16px 60px}
+.shell{background:#fff;border-radius:var(--rl);border:0.5px solid var(--border);overflow:hidden;box-shadow:0 2px 16px rgba(10,22,40,.06)}
+
+/* WORKFLOW NAV */
+.wf-nav{display:flex;border-bottom:1px solid var(--border);background:var(--lighter);padding:0 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.wf-tab{display:flex;align-items:center;gap:6px;padding:13px 14px;font-size:12px;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:.15s;white-space:nowrap;user-select:none;font-weight:600;flex-shrink:0}
+.wf-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.wf-tab:hover:not(.active){color:var(--text2)}
+.wf-tab.done{color:var(--success)}
+.wf-tab.done .sn{background:var(--success)}
+.sn{width:16px;height:16px;border-radius:50%;background:var(--text3);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s}
+.wf-tab.active .sn{background:var(--accent)}
+.wdiv{width:16px;align-self:center;height:0.5px;background:var(--border);flex-shrink:0}
+
+/* PROGRESS */
+.prog{height:3px;background:var(--light)}
+.prog-fill{height:100%;background:var(--accent);transition:width .4s ease}
+
+/* PANELS */
+.panel{padding:24px 20px 8px;display:none}
+.panel.active{display:block}
+.eyebrow{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;font-weight:700}
+.pg-title{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:5px;line-height:1.25}
+.pg-sub{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:18px}
+
+/* NOTICE */
+.notice{background:#fffbec;border:0.5px solid rgba(176,124,0,.25);border-radius:var(--r);padding:10px 13px;font-size:12px;color:#7a5800;line-height:1.6;margin-bottom:16px}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+
+/* CARDS */
+.card{background:#fff;border:0.5px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:13px}
+.card:last-child{margin-bottom:0}
+.card-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.card-sub{font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.5}
+
+/* UPLOAD */
+.upload-zone{border:1.5px dashed rgba(10,22,40,.18);border-radius:var(--r);padding:16px;text-align:center;cursor:pointer;transition:.15s;background:var(--lighter)}
+.upload-zone:hover{border-color:var(--accent);background:var(--light)}
+.upload-lbl{font-size:12px;color:var(--text2);font-weight:600;margin-bottom:2px}
+.upload-hint{font-size:11px;color:var(--text3)}
+.file-row{display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--lighter);border:0.5px solid var(--border);border-radius:var(--r);margin-top:6px;font-size:12px;color:var(--text2)}
+.ficon{color:var(--accent);flex-shrink:0}
+.fchk{margin-left:auto;color:var(--success);font-weight:700}
+
+/* META */
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.mf{display:flex;flex-direction:column;gap:2px}
+.ml{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.mv{font-size:13px;color:var(--text);font-weight:700}
+.mv.hi{color:var(--accent)}
+
+/* SUMMARY */
+.sum-block{background:var(--lighter);border-left:3px solid var(--accent);border-radius:0 var(--r) var(--r) 0;padding:11px 14px;font-size:13px;color:var(--text2);line-height:1.7;margin-top:12px}
+
+/* TAGS */
+.tag-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+.tag{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
+.t-blue{background:var(--light);color:#1a5a8a}
+.t-amber{background:#fff8e6;color:#8a5f00}
+.t-green{background:#eafaf1;color:#155a30}
+
+/* DIVIDERS */
+.divider{height:0.5px;background:var(--border);margin:18px 0}
+.sdiv{display:flex;align-items:center;gap:10px;margin:16px 0}
+.sdiv::before,.sdiv::after{content:'';flex:1;height:0.5px;background:var(--border)}
+.sdiv span{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-weight:700;white-space:nowrap}
+
+/* SCENARIO TABS */
+.scen-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.scen-btn{padding:6px 14px;font-size:12px;font-family:inherit;border:0.5px solid var(--border);border-radius:20px;cursor:pointer;background:#fff;color:var(--text2);transition:.15s;font-weight:600}
+.scen-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* SLIDERS */
+.sl-group{margin-bottom:18px}
+.sl-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+.sl-name{font-size:12px;font-weight:700;color:var(--navy);padding-right:8px}
+.sl-val{font-size:13px;font-weight:700;color:var(--accent);min-width:68px;text-align:right;flex-shrink:0}
+.sl-desc{font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:7px}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+
+/* METRICS */
+.metric-card{background:var(--lighter);border-radius:var(--r);padding:13px;text-align:center}
+.mc-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.mc-val{font-size:22px;font-weight:700;color:var(--navy)}
+.mc-val.up{color:var(--success)}
+.mc-val.dn{color:var(--danger)}
+.mc-ctx{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4}
+
+/* SENSITIVITY */
+.sens-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
+.sens-lbl{width:140px;color:var(--text2);flex-shrink:0;font-size:11px}
+.sens-track{flex:1;height:5px;background:var(--light);border-radius:3px;overflow:hidden}
+.sens-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .35s}
+.sens-v{width:48px;text-align:right;color:var(--text2);font-weight:700;font-size:11px}
+
+/* INTERP */
+.interp-box{background:var(--lighter);border-left:3px solid var(--accent);border-radius:0 var(--r) var(--r) 0;padding:12px 15px;font-size:13px;color:var(--text2);line-height:1.7;margin-top:14px}
+
+/* DEPT GRID */
+.dept-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:18px}
+.dept-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--rl);padding:15px;cursor:pointer;transition:.15s}
+.dept-card:hover{border-color:rgba(26,127,191,.35)}
+.dept-card.open{border-color:var(--accent);background:var(--lighter)}
+.dept-top{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.dept-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+.dept-name{font-size:12px;font-weight:700;color:var(--navy)}
+.dept-role{font-size:11px;color:var(--text3)}
+.dept-body{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:9px;display:none}
+.dept-card.open .dept-body{display:block}
+.flags{display:flex;flex-wrap:wrap;gap:4px}
+.flag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.fr{background:#fdf0f0;color:var(--danger)}
+.fy{background:#fff8e6;color:var(--warning)}
+.fg{background:#eafaf1;color:var(--success)}
+.fb{background:var(--light);color:#1a5a8a}
+
+/* EXEC SUMMARY */
+.exec-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--rl);padding:22px;margin-bottom:14px}
+.exec-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;gap:12px}
+.exec-title{font-size:18px;font-weight:700;color:var(--navy);line-height:1.25}
+.exec-meta{font-size:11px;color:var(--text3);text-align:right;line-height:1.6;flex-shrink:0}
+.exec-sect-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:9px;font-weight:700}
+.exec-row{display:flex;gap:9px;margin-bottom:14px;flex-wrap:wrap}
+.exec-blk{flex:1;min-width:100px;background:var(--lighter);border-radius:var(--r);padding:11px}
+.eb-label{font-size:11px;color:var(--text3);margin-bottom:2px}
+.eb-val{font-size:14px;font-weight:700;color:var(--navy)}
+.consid-list{list-style:none;padding:0}
+.consid-list li{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text2);line-height:1.65}
+.c-dot{width:7px;height:7px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.cd-r{background:var(--danger)}.cd-y{background:var(--warning)}.cd-g{background:var(--success)}
+.disc-box{border:0.5px solid rgba(26,127,191,.22);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;background:rgba(26,127,191,.03)}
+.disc-q{font-size:13px;color:var(--navy);line-height:1.6}
+.disc-dept{font-size:11px;color:var(--accent);margin-top:3px;font-weight:700}
+.footer-note{font-size:11px;color:var(--text3);line-height:1.65;border-top:0.5px solid var(--border);padding-top:13px;margin-top:6px}
+
+/* PRINT OVERLAY */
+.print-overlay{display:none;position:fixed;inset:0;background:rgba(10,22,40,.55);z-index:200;align-items:center;justify-content:center;padding:20px}
+.print-overlay.show{display:flex}
+.print-modal{background:#fff;border-radius:var(--rl);max-width:760px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(10,22,40,.2)}
+.print-modal-bar{background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:var(--rl) var(--rl) 0 0}
+.print-modal-title{color:#fff;font-size:14px;font-weight:700}
+.print-modal-actions{display:flex;gap:8px;align-items:center}
+.btn-print{background:var(--accent);color:#fff;border:none;padding:7px 16px;border-radius:var(--r);font-size:12px;font-family:inherit;font-weight:700;cursor:pointer}
+.btn-close-modal{background:rgba(255,255,255,.15);color:#fff;border:none;padding:7px 14px;border-radius:var(--r);font-size:12px;font-family:inherit;cursor:pointer}
+.print-modal-body{padding:28px 32px}
+.pm-logo{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.pm-logo span{color:var(--accent2)}
+.pm-meta{font-size:11px;color:var(--text3);margin-bottom:20px;padding-bottom:16px;border-bottom:1.5px solid var(--navy);display:flex;justify-content:space-between;align-items:flex-end}
+.pm-deal-title{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.pm-deal-sub{font-size:12px;color:var(--text3);margin-bottom:20px}
+.pm-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.pm-m{background:var(--lighter);padding:10px;border-radius:6px;text-align:center}
+.pm-ml{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.pm-mv{font-size:16px;font-weight:700;color:var(--navy)}
+.pm-sect{margin-bottom:16px}
+.pm-sect-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-weight:700;margin-bottom:7px;border-bottom:0.5px solid var(--border);padding-bottom:4px}
+.pm-interp{background:var(--lighter);border-left:3px solid var(--accent);padding:10px 13px;font-size:12px;color:var(--text2);line-height:1.7;border-radius:0 6px 6px 0}
+.pm-li{display:flex;gap:8px;margin-bottom:7px;font-size:12px;color:var(--text2);line-height:1.6;align-items:flex-start}
+.pm-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.pm-disc{border:0.5px solid rgba(26,127,191,.2);border-radius:6px;padding:10px 12px;margin-bottom:7px;background:rgba(26,127,191,.03)}
+.pm-dq{font-size:12px;color:var(--navy);line-height:1.5}
+.pm-dd{font-size:10px;color:var(--accent);margin-top:3px;font-weight:700}
+.pm-fn{font-size:10px;color:var(--text3);line-height:1.6;border-top:0.5px solid var(--border);padding-top:12px;margin-top:16px}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:9px;justify-content:flex-end;padding:18px 0}
+.btn-pri{background:var(--navy);color:#fff;border:none;padding:10px 22px;border-radius:var(--r);font-size:13px;font-family:inherit;font-weight:700;cursor:pointer;transition:.15s}
+.btn-pri:hover{background:var(--slate)}
+.btn-out{background:transparent;color:var(--navy);border:0.5px solid var(--border);padding:10px 20px;border-radius:var(--r);font-size:13px;font-family:inherit;font-weight:700;cursor:pointer;transition:.15s}
+.btn-out:hover{background:var(--lighter)}
+.btn-ghost{background:transparent;color:var(--text3);border:none;padding:10px 14px;border-radius:var(--r);font-size:13px;font-family:inherit;cursor:pointer;transition:.15s}
+.btn-ghost:hover{color:var(--text);background:var(--lighter)}
+
+/* MOBILE */
+@media(max-width:680px){
+  .topbar{padding:0 16px;height:52px}
+  .badge-int{display:none}
+  .user-name{display:none}
+  .page{margin:14px auto;padding:0 10px 40px}
+  .panel{padding:18px 14px 8px}
+  .g2{grid-template-columns:1fr}
+  .g3{grid-template-columns:1fr}
+  .dept-grid{grid-template-columns:1fr}
+  .meta-grid{grid-template-columns:1fr 1fr}
+  .exec-row{flex-direction:column}
+  .exec-blk{min-width:unset}
+  .exec-hd{flex-direction:column;gap:6px}
+  .exec-meta{text-align:left}
+  .pm-metrics{grid-template-columns:1fr 1fr}
+  .btn-row{flex-wrap:wrap}
+  .btn-pri,.btn-out{flex:1;text-align:center;padding:10px 12px}
+  .print-modal-body{padding:18px}
+  .wf-tab{padding:11px 10px;font-size:11px}
+}
+@media(max-width:400px){
+  .meta-grid{grid-template-columns:1fr}
+}
+
+@media print{
+  .print-overlay{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Clear<span>Path</span></div>
+    <div class="badge badge-int">Internal Use Only</div>
+    <div class="badge badge-demo">Demo Mode</div>
+  </div>
+  <div class="user-pill">
+    <div class="avatar">JI</div>
+    <span class="user-name">J. Iha &nbsp;&middot;&nbsp; Commercial Strategy</span>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="print-overlay" id="print-overlay" onclick="closeModal(event)">
+  <div class="print-modal" id="print-modal">
+    <div class="print-modal-bar">
+      <div class="print-modal-title">Strategic Review Brief &mdash; Export Preview</div>
+      <div class="print-modal-actions">
+        <button class="btn-print" onclick="printBrief()">&#128438; Print / Save PDF</button>
+        <button class="btn-close-modal" onclick="closeExport()">Close</button>
+      </div>
+    </div>
+    <div class="print-modal-body" id="brief-body">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<div class="page">
+<div class="shell">
+
+  <!-- WORKFLOW TABS -->
+  <div class="wf-nav">
+    <div class="wf-tab active" id="tab0" onclick="goTo(0)"><span class="sn">1</span>Deal Overview</div>
+    <div class="wdiv"></div>
+    <div class="wf-tab" id="tab1" onclick="goTo(1)"><span class="sn">2</span>Scenario Analysis</div>
+    <div class="wdiv"></div>
+    <div class="wf-tab" id="tab2" onclick="goTo(2)"><span class="sn">3</span>Stakeholder Lenses</div>
+    <div class="wdiv"></div>
+    <div class="wf-tab" id="tab3" onclick="goTo(3)"><span class="sn">4</span>Executive Summary</div>
+  </div>
+  <div class="prog"><div class="prog-fill" id="prog" style="width:25%"></div></div>
+
+  <!-- ═══════════════════════════════
+       PANEL 1 — DEAL OVERVIEW
+  ═══════════════════════════════ -->
+  <div class="panel active" id="p0">
+    <div class="eyebrow">Step 1 of 4 &middot; Deal Overview</div>
+    <h1 class="pg-title">Review deal materials and confirm project context</h1>
+    <p class="pg-sub">Upload supporting documents and confirm key deal parameters before scenario work begins. All materials remain internal to this review session.</p>
+    <div class="notice">&#9432;&nbsp; Demo scenario pre-loaded: <strong>Koko'olau Village</strong> &mdash; a 142-unit mixed-use development in Kailua, O'ahu with a $32M financing request.</div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Upload supporting materials</div>
+        <div class="card-sub">Credit brief, financial statements, appraisal, environmental reports, proforma</div>
+        <div class="upload-zone" onclick="addFile()">
+          <div style="font-size:22px;margin-bottom:5px">&#8679;</div>
+          <div class="upload-lbl">Drag files here or click to browse</div>
+          <div class="upload-hint">PDF, XLSX, DOCX &middot; Max 50MB per file</div>
+        </div>
+        <div id="file-list">
+          <div class="file-row"><span class="ficon">&#128196;</span>Kokoolau_Village_CreditBrief_v3.pdf<span class="fchk">&#10003;</span></div>
+          <div class="file-row"><span class="ficon">&#128196;</span>Proforma_FY25_Assumptions.xlsx<span class="fchk">&#10003;</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Deal parameters</div>
+        <div class="card-sub">Confirm key figures for this review session</div>
+        <div class="meta-grid">
+          <div class="mf"><div class="ml">Project Name</div><div class="mv">Koko'olau Village</div></div>
+          <div class="mf"><div class="ml">Asset Type</div><div class="mv">Mixed-Use CRE</div></div>
+          <div class="mf"><div class="ml">Total Project Cost</div><div class="mv hi">$48.5M</div></div>
+          <div class="mf"><div class="ml">Financing Request</div><div class="mv hi">$32.0M</div></div>
+          <div class="mf"><div class="ml">LTV at Request</div><div class="mv">66.0%</div></div>
+          <div class="mf"><div class="ml">Market</div><div class="mv">Kailua, O'ahu</div></div>
+          <div class="mf"><div class="ml">Loan Term</div><div class="mv">5-year</div></div>
+          <div class="mf"><div class="ml">Est. Completion</div><div class="mv">Q3 2027</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Project summary</div>
+      <div class="card-sub">Synthesized from uploaded credit brief &mdash; for internal alignment only, not a legal or underwriting document</div>
+      <div class="sum-block">Koko'olau Village is a proposed 142-unit mixed-use development in Kailua comprising 110 market-rate residential units, 32 affordable units at 80% AMI, and 18,000 sq ft of ground-floor retail. The sponsor, Pacific Kai Development Group, has completed two comparable projects in Honolulu since 2019. The project site is controlled under a 75-year ground lease with the state. Construction financing is requested at $32M with a planned take-out via HUD 221(d)(4) or permanent refinance at stabilization. Entitlements are pending final DPP review; environmental clearance received June 2024.</div>
+      <div class="tag-row">
+        <span class="tag t-blue">Mixed-Income Housing</span>
+        <span class="tag t-amber">Entitlement Risk</span>
+        <span class="tag t-green">Experienced Sponsor</span>
+        <span class="tag t-amber">Ground Lease Structure</span>
+        <span class="tag t-blue">Kailua Submarket</span>
+        <span class="tag t-green">CRA Value</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-pri" onclick="goTo(1)">Continue to Scenario Analysis &rarr;</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════
+       PANEL 2 — SCENARIO ANALYSIS
+  ═══════════════════════════════ -->
+  <div class="panel" id="p1">
+    <div class="eyebrow">Step 2 of 4 &middot; Scenario Analysis</div>
+    <h1 class="pg-title">Adjust assumptions and observe strategic implications</h1>
+    <p class="pg-sub">Sliders represent key variables in this deal's financial and operational profile. Use scenario presets or adjust individually. Outputs update in real time and reflect strategic interpretation &mdash; not underwriting conclusions or credit decisions.</p>
+
+    <div class="scen-tabs">
+      <button class="scen-btn active" onclick="setScenario('base',this)">Base Case</button>
+      <button class="scen-btn" onclick="setScenario('conservative',this)">Conservative</button>
+      <button class="scen-btn" onclick="setScenario('optimistic',this)">Optimistic</button>
+      <button class="scen-btn" onclick="setScenario('stress',this)">Stress Test</button>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Financial assumptions</div>
+        <div class="card-sub">Deal-level financial variables</div>
+        <div class="sl-group">
+          <div class="sl-header"><div class="sl-name">Residential occupancy at stabilization</div><div class="sl-val" id="v-occ">92%</div></div>
+          <div class="sl-desc">Expected lease-up rate at stabilization. Below 88% typically signals elevated absorption risk in this submarket.</div>
+          <input type="range" min="70" max="99" step="1" value="92" id="s-occ" oninput="calc()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><div class="sl-name">Retail absorption (% of NRA leased)</div><div class="sl-val" id="v-ret">75%</div></div>
+          <div class="sl-desc">Proportion of 18,000 sq ft retail leased by stabilization. Ground-floor retail in Kailua has faced slow absorption since 2021.</div>
+          <input type="range" min="40" max="100" step="1" value="75" id="s-ret" oninput="calc()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><div class="sl-name">Construction cost variance</div><div class="sl-val" id="v-cost">+8%</div></div>
+          <div class="sl-desc">Percentage above base proforma budget. Hawaii construction inflation averaged 9&ndash;12% annually in 2022&ndash;2024.</div>
+          <input type="range" min="-5" max="30" step="1" value="8" id="s-cost" oninput="calc()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><div class="sl-name">Months to stabilization</div><div class="sl-val" id="v-mo">18 mo</div></div>
+          <div class="sl-desc">Time from construction completion to stabilized operations. Affects bridge period carry costs and liquidity exposure.</div>
+          <input type="range" min="6" max="36" step="1" value="18" id="s-mo" oninput="calc()">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Market and structural assumptions</div>
+        <div class="card-sub">External and deal-structure variables</div>
+        <div class="sl-group">
+          <div class="sl-header"><div class="sl-name">Prevailing interest rate assumption</div><div class="sl-val" id="v-rate">6.8%</div></div>
+          <div class="sl-desc">Rate environment at permanent financing. Each 50bps shift meaningfully affects take-out feasibility and DSCR.</div>
+          <input type="range" min="50" max="100" step="1" value="68" id="s-rate" oninput="calc()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><div class="sl-name">Cap rate at stabilization</div><div class="sl-val" id="v-cap">5.2%</div></div>
+          <div class="sl-desc">Exit or valuation cap rate. Mixed-use Kailua assets have transacted between 4.8&ndash;5.8% in recent cycles.</div>
+          <input type="range" min="40" max="80" step="1" value="52" id="s-cap" oninput="calc()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><div class="sl-name">Affordable unit compliance complexity</div><div class="sl-val" id="v-comp">Moderate</div></div>
+          <div class="sl-desc">Operational overhead of maintaining 32 units at 80% AMI under HPHA/HUD requirements. Higher complexity reduces NOI and DSCR estimates.</div>
+          <input type="range" min="1" max="3" step="1" value="2" id="s-comp" oninput="calc()">
+        </div>
+        <div class="sl-group">
+          <div class="sl-header"><div class="sl-name">Entitlement delay risk</div><div class="sl-val" id="v-ent">Moderate</div></div>
+          <div class="sl-desc">Probability-weighted time impact of pending DPP entitlements. Higher risk extends the bridge period and increases carry exposure.</div>
+          <input type="range" min="1" max="3" step="1" value="2" id="s-ent" oninput="calc()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Scenario output &mdash; strategic interpretation</div>
+      <div class="card-sub">Based on current slider values. These outputs support internal discussion &mdash; not underwriting calculations or credit approval indicators.</div>
+      <div class="g3" style="margin-top:13px;margin-bottom:18px">
+        <div class="metric-card">
+          <div class="mc-label">Est. stabilized NOI</div>
+          <div class="mc-val" id="o-noi">$2.84M</div>
+          <div class="mc-ctx" id="o-noi-ctx">Base case &mdash; moderate confidence</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">DSCR estimate</div>
+          <div class="mc-val" id="o-dscr">1.22x</div>
+          <div class="mc-ctx" id="o-dscr-ctx">Above 1.20x threshold</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Carry risk exposure</div>
+          <div class="mc-val" id="o-carry">$3.1M</div>
+          <div class="mc-ctx" id="o-carry-ctx">18-month bridge period</div>
+        </div>
+      </div>
+      <div class="sdiv"><span>Sensitivity &mdash; what moves most</span></div>
+      <div class="sens-row"><span class="sens-lbl">Occupancy rate</span><div class="sens-track"><div class="sens-fill" id="sf1" style="width:85%"></div></div><span class="sens-v" id="sv1">High</span></div>
+      <div class="sens-row"><span class="sens-lbl">Interest rate</span><div class="sens-track"><div class="sens-fill" id="sf2" style="width:72%"></div></div><span class="sens-v" id="sv2">High</span></div>
+      <div class="sens-row"><span class="sens-lbl">Construction cost</span><div class="sens-track"><div class="sens-fill" id="sf3" style="width:58%"></div></div><span class="sens-v" id="sv3">Medium</span></div>
+      <div class="sens-row"><span class="sens-lbl">Retail absorption</span><div class="sens-track"><div class="sens-fill" id="sf4" style="width:46%"></div></div><span class="sens-v" id="sv4">Medium</span></div>
+      <div class="sens-row"><span class="sens-lbl">Timeline / entitlement</span><div class="sens-track"><div class="sens-fill" id="sf5" style="width:33%"></div></div><span class="sens-v" id="sv5">Lower</span></div>
+      <div class="interp-box" id="o-interp">Base case assumptions produce a deal that clears minimum DSCR thresholds with limited headroom. The primary strategic question is whether the construction timeline and retail absorption assumptions are sufficiently conservative given current Kailua market conditions. Entitlement completion timing is the single largest schedule variable.</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-out" onclick="goTo(0)">&larr; Back</button>
+      <button class="btn-pri" onclick="goTo(2)">Continue to Stakeholder Lenses &rarr;</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════
+       PANEL 3 — STAKEHOLDER LENSES
+  ═══════════════════════════════ -->
+  <div class="panel" id="p2">
+    <div class="eyebrow">Step 3 of 4 &middot; Stakeholder Lenses</div>
+    <h1 class="pg-title">How each department views this deal</h1>
+    <p class="pg-sub">Internal decisions involve more than financial metrics. This section surfaces how each department's mandate, risk tolerance, and operational priorities shape their interpretation of the same deal. Click any card to expand.</p>
+
+    <div class="dept-grid">
+      <div class="dept-card open" onclick="toggleDept(this)">
+        <div class="dept-top">
+          <div class="dept-icon" style="background:#e8f4fd">&#128737;</div>
+          <div><div class="dept-name">Credit &amp; Risk</div><div class="dept-role">Primary approval lens</div></div>
+        </div>
+        <div class="dept-body">Credit will focus on DSCR headroom, LTV at various stress scenarios, and the reliability of the take-out assumption. The ground lease structure and pending entitlements are the two issues most likely to trigger additional due diligence or covenant language. The affordable unit compliance obligation may also require a separate operational risk assessment before the deal advances.</div>
+        <div class="flags"><span class="flag fr">DSCR headroom</span><span class="flag fr">Ground lease title risk</span><span class="flag fy">Entitlement status</span><span class="flag fy">Take-out certainty</span></div>
+      </div>
+      <div class="dept-card" onclick="toggleDept(this)">
+        <div class="dept-top">
+          <div class="dept-icon" style="background:#eafaf1">&#128101;</div>
+          <div><div class="dept-name">Relationship Management</div><div class="dept-role">Sponsor and market context</div></div>
+        </div>
+        <div class="dept-body">RM will advocate for the sponsor's track record and the long-term relationship value of this deal. Pacific Kai Development Group has a clean two-project history with the bank. RM's primary concern is that internal process timelines don't create competitive disadvantage &mdash; other regional lenders are already in active review.</div>
+        <div class="flags"><span class="flag fg">Sponsor relationship</span><span class="flag fy">Competitive timeline pressure</span><span class="flag fb">Repeat borrower</span></div>
+      </div>
+      <div class="dept-card" onclick="toggleDept(this)">
+        <div class="dept-top">
+          <div class="dept-icon" style="background:#fff8e6">&#127981;</div>
+          <div><div class="dept-name">Treasury &amp; Capital Planning</div><div class="dept-role">Balance sheet and liquidity fit</div></div>
+        </div>
+        <div class="dept-body">Treasury will evaluate this deal's fit within current portfolio concentration limits, particularly CRE and construction exposure. At $32M, this is a meaningful balance sheet item. Whether to hold on balance sheet or syndicate is likely to surface early. Duration mismatch between the construction period and current funding mix is also relevant given the rate environment.</div>
+        <div class="flags"><span class="flag fr">CRE concentration limits</span><span class="flag fy">Duration mismatch</span><span class="flag fb">Syndication candidate</span></div>
+      </div>
+      <div class="dept-card" onclick="toggleDept(this)">
+        <div class="dept-top">
+          <div class="dept-icon" style="background:#fdf0f0">&#9878;</div>
+          <div><div class="dept-name">Legal &amp; Compliance</div><div class="dept-role">Structural and regulatory review</div></div>
+        </div>
+        <div class="dept-body">Legal will need to review the ground lease structure carefully &mdash; a 75-year state leasehold creates lender priority questions and potential complications in a default scenario. The affordable housing compliance obligation under HPHA/HUD guidelines requires specific loan covenant language. Fair lending documentation must be current given the mixed-income component.</div>
+        <div class="flags"><span class="flag fr">Leasehold lender rights</span><span class="flag fy">Fair lending docs</span><span class="flag fy">HUD covenant language</span><span class="flag fb">Affordable unit structure</span></div>
+      </div>
+      <div class="dept-card" onclick="toggleDept(this)">
+        <div class="dept-top">
+          <div class="dept-icon" style="background:#f0f0ff">&#9881;</div>
+          <div><div class="dept-name">Operations</div><div class="dept-role">Servicing and monitoring capacity</div></div>
+        </div>
+        <div class="dept-body">Operations is primarily concerned with draw schedule management during construction and the monitoring capacity required for a mixed-income project with HUD compliance obligations. The retail component adds a second lease-up monitoring track. The deal is within normal servicing bandwidth but would benefit from a dedicated monitoring plan at closing.</div>
+        <div class="flags"><span class="flag fy">Draw schedule complexity</span><span class="flag fy">Dual lease-up tracking</span><span class="flag fg">Within servicing capacity</span></div>
+      </div>
+      <div class="dept-card" onclick="toggleDept(this)">
+        <div class="dept-top">
+          <div class="dept-icon" style="background:#f4f0ff">&#128200;</div>
+          <div><div class="dept-name">Executive Leadership</div><div class="dept-role">Strategic fit and community context</div></div>
+        </div>
+        <div class="dept-body">Executive leadership will weigh this deal against the bank's community development commitments, CRA activity, and competitive positioning in the Hawaii housing market. The affordable component meaningfully strengthens the CRA narrative. The ground lease structure and entitlement risk are the two issues most likely to prompt executive-level questions before committee.</div>
+        <div class="flags"><span class="flag fg">CRA credit value</span><span class="flag fg">Community housing alignment</span><span class="flag fy">Reputational risk if delayed</span></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-out" onclick="goTo(1)">&larr; Back</button>
+      <button class="btn-pri" onclick="goTo(3);buildSummary()">Generate Executive Summary &rarr;</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════
+       PANEL 4 — EXECUTIVE SUMMARY
+  ═══════════════════════════════ -->
+  <div class="panel" id="p3">
+    <div class="eyebrow">Step 4 of 4 &middot; Executive Summary</div>
+    <h1 class="pg-title">Internal discussion brief</h1>
+    <p class="pg-sub">Generated from the deal parameters, scenario assumptions, and stakeholder considerations entered in this session. For internal alignment and executive discussion only &mdash; not a credit memo, underwriting opinion, or approval recommendation.</p>
+
+    <div class="exec-card">
+      <div class="exec-hd">
+        <div>
+          <div class="exec-title">Koko'olau Village &mdash; Strategic Review Brief</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px">Mixed-Use CRE Construction &middot; Kailua, O'ahu &middot; $32M Financing Request</div>
+        </div>
+        <div class="exec-meta">Prepared via ClearPath<br><span id="sum-date">Internal use only</span></div>
+      </div>
+      <div class="divider" style="margin:0 0 16px"></div>
+
+      <div style="margin-bottom:16px">
+        <div class="exec-sect-lbl">Deal at a glance</div>
+        <div class="exec-row">
+          <div class="exec-blk"><div class="eb-label">Total project cost</div><div class="eb-val">$48.5M</div></div>
+          <div class="exec-blk"><div class="eb-label">Financing request</div><div class="eb-val">$32.0M</div></div>
+          <div class="exec-blk"><div class="eb-label">LTV at request</div><div class="eb-val">66.0%</div></div>
+          <div class="exec-blk"><div class="eb-label">Scenario DSCR</div><div class="eb-val" id="sum-dscr">1.22x</div></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div class="exec-sect-lbl">Strategic interpretation</div>
+        <div class="sum-block" id="sum-interp">Under current scenario assumptions, this deal presents a viable but tightly structured opportunity in a supply-constrained submarket. The base case DSCR clears the 1.20x floor with limited cushion. The affordable housing component strengthens CRA positioning and community alignment, while the ground lease structure and pending entitlements represent the primary structural risks requiring cross-functional attention before committee.</div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div class="exec-sect-lbl">Cross-functional considerations for discussion</div>
+        <ul class="consid-list">
+          <li><span class="c-dot cd-r"></span>Credit and Legal should align on leasehold lender rights and default remedies before the deal advances &mdash; this is the structural issue most likely to create downstream complexity.</li>
+          <li><span class="c-dot cd-y"></span>Treasury should confirm whether this deal fits within current CRE concentration limits, or whether syndication should be explored as a parallel track from the outset.</li>
+          <li><span class="c-dot cd-y"></span>Entitlement status from DPP should be confirmed as a condition precedent &mdash; a 30&ndash;60 day delay materially affects the construction draw schedule and carry exposure.</li>
+          <li><span class="c-dot cd-g"></span>The affordable housing component represents meaningful CRA value and may warrant proactive communication with community development teams to document impact at origination.</li>
+          <li><span class="c-dot cd-y"></span>RM should be prepared to address the competitive timeline &mdash; another regional lender is in active review, which creates a window-of-exclusivity question for committee.</li>
+        </ul>
+      </div>
+
+      <div style="margin-bottom:6px">
+        <div class="exec-sect-lbl">Suggested discussion prompts for committee</div>
+        <div class="disc-box"><div class="disc-q">Is the ground lease structure something our credit policy can accommodate as written, or does it require a policy exception or additional credit enhancement?</div><div class="disc-dept">Credit &amp; Risk &middot; Legal &amp; Compliance</div></div>
+        <div class="disc-box"><div class="disc-q">At what occupancy rate does this deal fall below our DSCR threshold &mdash; and does the sponsor have a contingency plan if residential absorption is slower than projected?</div><div class="disc-dept">Credit &amp; Risk &middot; Relationship Management</div></div>
+        <div class="disc-box"><div class="disc-q">Given current CRE concentration levels, does this deal fit within portfolio limits, or does it require a formal concentration review before committee?</div><div class="disc-dept">Treasury &amp; Capital Planning &middot; Executive Leadership</div></div>
+        <div class="disc-box"><div class="disc-q">What does the CRA credit analysis look like for this deal, and has community development been consulted on the affordable unit structure and compliance requirements?</div><div class="disc-dept">Executive Leadership &middot; Legal &amp; Compliance</div></div>
+      </div>
+
+      <div class="footer-note">This brief was generated from assumptions entered into the ClearPath internal review platform. It does not represent an underwriting conclusion, credit opinion, or formal approval recommendation. All figures are scenario-based and subject to independent verification by qualified credit, legal, and compliance professionals. For internal discussion use only.</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-out" onclick="goTo(2)">&larr; Back</button>
+      <button class="btn-ghost" onclick="window.print()">Print Page</button>
+      <button class="btn-pri" onclick="openExport()">Export Brief &darr;</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+var pct=['25%','50%','75%','100%'];
+
+function goTo(n){
+  for(var i=0;i<4;i++){
+    document.getElementById('p'+i).classList.toggle('active',i===n);
+    var t=document.getElementById('tab'+i);
+    t.classList.remove('active','done');
+    if(i===n) t.classList.add('active');
+    else if(i<n) t.classList.add('done');
+  }
+  document.getElementById('prog').style.width=pct[n];
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function addFile(){
+  var names=['Appraisal_Kailua_2025Q1.pdf','EnvironmentalReport_Phase1.pdf','SponsorFinancials_PacificKai.pdf'];
+  var fl=document.getElementById('file-list');
+  var existing=fl.querySelectorAll('.file-row').length;
+  if(existing>=5) return;
+  var name=names[existing-2]||names[0];
+  var d=document.createElement('div');
+  d.className='file-row';
+  d.innerHTML='<span class="ficon">&#128196;</span>'+name+'<span class="fchk">&#10003;</span>';
+  fl.appendChild(d);
+}
+
+function toggleDept(el){ el.classList.toggle('open'); }
+
+function setScenario(t,btn){
+  document.querySelectorAll('.scen-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  var p={
+    base:        {occ:92,ret:75,cost:8, mo:18,rate:68,cap:52,comp:2,ent:2},
+    conservative:{occ:84,ret:58,cost:15,mo:24,rate:72,cap:58,comp:2,ent:3},
+    optimistic:  {occ:96,ret:90,cost:4, mo:12,rate:62,cap:48,comp:1,ent:1},
+    stress:      {occ:78,ret:45,cost:22,mo:30,rate:80,cap:65,comp:3,ent:3}
+  };
+  var v=p[t];
+  Object.keys(v).forEach(function(k){ document.getElementById('s-'+k).value=v[k]; });
+  calc();
+}
+
+var interps={
+  stress:'Stress-test assumptions push this deal below minimum DSCR thresholds. Carry exposure is elevated and both occupancy and retail absorption are under significant pressure. This configuration would require additional credit enhancement, increased sponsor equity, or structural mitigants before advancing to committee.',
+  tight:'Current assumptions reflect a cautious but constrained deal profile. DSCR is near or slightly below the minimum threshold with limited upside cushion. The primary risk concentration is in occupancy rate and the rate environment. Committee will likely focus on what happens if either variable moves further in an adverse direction.',
+  base:'Under current scenario assumptions, this deal presents a viable but tightly structured opportunity in a supply-constrained submarket. The base case DSCR clears the 1.20x floor with limited headroom. The primary strategic question is whether the construction timeline and retail absorption assumptions are sufficiently conservative given current Kailua market conditions.',
+  comfortable:'Favorable assumptions produce a deal with comfortable DSCR margin and manageable carry exposure. The key strategic question is whether the occupancy and absorption projections are defensible to committee, and whether additional haircuts for the ground lease structure and entitlement status have been factored in.'
+};
+
+function calc(){
+  var occ  = +document.getElementById('s-occ').value;
+  var ret  = +document.getElementById('s-ret').value;
+  var cost = +document.getElementById('s-cost').value;
+  var mo   = +document.getElementById('s-mo').value;
+  var rate = +document.getElementById('s-rate').value/10;
+  var cap  = +document.getElementById('s-cap').value/10;
+  var comp = +document.getElementById('s-comp').value;
+  var ent  = +document.getElementById('s-ent').value;
+
+  document.getElementById('v-occ').textContent  = occ+'%';
+  document.getElementById('v-ret').textContent  = ret+'%';
+  document.getElementById('v-cost').textContent = (cost>=0?'+':'')+cost+'%';
+  document.getElementById('v-mo').textContent   = mo+' mo';
+  document.getElementById('v-rate').textContent = rate.toFixed(1)+'%';
+  document.getElementById('v-cap').textContent  = cap.toFixed(1)+'%';
+  var cl=['','Low','Moderate','High'];
+  document.getElementById('v-comp').textContent = cl[comp];
+  document.getElementById('v-ent').textContent  = cl[ent];
+
+  var compP  = [0,0,0.012,0.028][comp];
+  var entMo  = [0,0,1.5,3.5][ent];
+  var adjMo  = mo+entMo;
+
+  var noi   = +(2.84*(occ/92)*(0.72+ret/100*0.28)*(1-(cost-8)*0.004)*(1-compP)).toFixed(2);
+  var dscr  = +(1.22*(occ/92)*(1-(rate-6.8)*0.08)*(1-(cost-8)*0.003)*(1-compP*0.6)).toFixed(2);
+  var carry = +(32*rate/100*adjMo/12).toFixed(1);
+
+  document.getElementById('o-noi').textContent = '$'+noi.toFixed(2)+'M';
+
+  var de=document.getElementById('o-dscr');
+  de.textContent=dscr.toFixed(2)+'x';
+  de.className='mc-val'+(dscr>=1.25?' up':dscr<1.15?' dn':'');
+
+  document.getElementById('o-dscr-ctx').textContent=
+    dscr>=1.25?'Above 1.25x \u2014 comfortable headroom':
+    dscr>=1.20?'Above 1.20x \u2014 limited headroom':
+    dscr>=1.10?'Near threshold \u2014 flag for credit review':
+               'Below 1.20x \u2014 credit attention required';
+
+  document.getElementById('o-carry').textContent     = '$'+carry.toFixed(1)+'M';
+  document.getElementById('o-carry-ctx').textContent = adjMo.toFixed(0)+'-month bridge period at '+rate.toFixed(1)+'%'+(entMo>0?' (incl. entitlement delay)':'');
+  document.getElementById('o-noi-ctx').textContent   = dscr>=1.25?'Above threshold \u2014 favorable':'Near threshold \u2014 moderate confidence';
+
+  var s1=Math.min(96,Math.round(65+(occ-70)*1.3));
+  var s2=Math.min(96,Math.round(35+rate*8.5));
+  var s3=Math.min(96,Math.round(28+cost*2.2));
+  var s4=Math.min(96,Math.round(18+(100-ret)*0.65));
+  var s5=Math.min(96,Math.round(14+adjMo*1.1));
+  [s1,s2,s3,s4,s5].forEach(function(v,i){
+    document.getElementById('sf'+(i+1)).style.width=v+'%';
+    document.getElementById('sv'+(i+1)).textContent=v>70?'High':v>45?'Medium':'Lower';
+  });
+
+  var key=dscr<1.10?'stress':dscr<1.20?'tight':dscr<1.35?'base':'comfortable';
+  document.getElementById('o-interp').textContent=interps[key];
+  document.getElementById('sum-dscr').textContent=dscr.toFixed(2)+'x';
+  document.getElementById('sum-interp').textContent=interps[key]+' The affordable housing component strengthens CRA positioning, while the ground lease structure and pending entitlements remain the primary structural risks requiring cross-functional attention before committee.';
+}
+
+function buildSummary(){
+  var now=new Date();
+  document.getElementById('sum-date').textContent='Session: '+now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+/* ── EXPORT MODAL (no popup blocker issues) ── */
+function openExport(){
+  var dscr     = document.getElementById('sum-dscr').textContent;
+  var interp   = document.getElementById('sum-interp').textContent;
+  var date     = document.getElementById('sum-date').textContent;
+  var noi      = document.getElementById('o-noi').textContent;
+  var carry    = document.getElementById('o-carry').textContent;
+  var carryCtx = document.getElementById('o-carry-ctx').textContent;
+  var dscrCtx  = document.getElementById('o-dscr-ctx').textContent;
+
+  document.getElementById('brief-body').innerHTML =
+    '<div class="pm-logo">Clear<span>Path</span></div>'+
+    '<div class="pm-meta">'+
+      '<span>Internal Deal Review Platform</span>'+
+      '<span style="text-align:right;color:#b02a2a;font-weight:700">Internal Use Only &nbsp;&middot;&nbsp; '+date+'</span>'+
+    '</div>'+
+    '<div class="pm-deal-title">Koko\u02bbolau Village \u2014 Strategic Review Brief</div>'+
+    '<div class="pm-deal-sub">Mixed-Use CRE Construction &nbsp;&middot;&nbsp; Kailua, O\u02bbaahu &nbsp;&middot;&nbsp; $32M Financing Request</div>'+
+    '<div class="pm-metrics">'+
+      '<div class="pm-m"><div class="pm-ml">Total Project Cost</div><div class="pm-mv">$48.5M</div></div>'+
+      '<div class="pm-m"><div class="pm-ml">Financing Request</div><div class="pm-mv">$32.0M</div></div>'+
+      '<div class="pm-m"><div class="pm-ml">LTV at Request</div><div class="pm-mv">66.0%</div></div>'+
+      '<div class="pm-m"><div class="pm-ml">Scenario DSCR</div><div class="pm-mv">'+dscr+'</div></div>'+
+    '</div>'+
+    '<div class="pm-sect"><div class="pm-sect-lbl">Scenario outputs</div>'+
+      '<div class="pm-metrics" style="grid-template-columns:repeat(3,1fr)">'+
+        '<div class="pm-m"><div class="pm-ml">Est. Stabilized NOI</div><div class="pm-mv">'+noi+'</div></div>'+
+        '<div class="pm-m"><div class="pm-ml">DSCR Estimate</div><div class="pm-mv">'+dscr+'</div><div style="font-size:10px;color:#6b8299;margin-top:2px">'+dscrCtx+'</div></div>'+
+        '<div class="pm-m"><div class="pm-ml">Carry Risk Exposure</div><div class="pm-mv">'+carry+'</div><div style="font-size:10px;color:#6b8299;margin-top:2px">'+carryCtx+'</div></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="pm-sect"><div class="pm-sect-lbl">Strategic interpretation</div><div class="pm-interp">'+interp+'</div></div>'+
+    '<div class="pm-sect"><div class="pm-sect-lbl">Cross-functional considerations</div>'+
+      '<div class="pm-li"><span class="pm-dot" style="background:#b02a2a"></span>Credit and Legal should align on leasehold lender rights and default remedies before the deal advances.</div>'+
+      '<div class="pm-li"><span class="pm-dot" style="background:#b07c00"></span>Treasury should confirm CRE concentration fit, or explore syndication as a parallel track from the outset.</div>'+
+      '<div class="pm-li"><span class="pm-dot" style="background:#b07c00"></span>Entitlement status from DPP should be confirmed as a condition precedent \u2014 a delay materially affects carry exposure.</div>'+
+      '<div class="pm-li"><span class="pm-dot" style="background:#1a7a3e"></span>The affordable housing component represents meaningful CRA value and warrants proactive documentation at origination.</div>'+
+      '<div class="pm-li"><span class="pm-dot" style="background:#b07c00"></span>RM should address the competitive timeline \u2014 another regional lender is in active review.</div>'+
+    '</div>'+
+    '<div class="pm-sect"><div class="pm-sect-lbl">Discussion prompts for committee</div>'+
+      '<div class="pm-disc"><div class="pm-dq">Is the ground lease structure something our credit policy can accommodate as written, or does it require a policy exception?</div><div class="pm-dd">Credit &amp; Risk &middot; Legal &amp; Compliance</div></div>'+
+      '<div class="pm-disc"><div class="pm-dq">At what occupancy rate does this deal fall below our DSCR threshold \u2014 and does the sponsor have a contingency plan?</div><div class="pm-dd">Credit &amp; Risk &middot; Relationship Management</div></div>'+
+      '<div class="pm-disc"><div class="pm-dq">Given current CRE concentration levels, does this deal fit within portfolio limits or require a formal concentration review?</div><div class="pm-dd">Treasury &amp; Capital Planning &middot; Executive Leadership</div></div>'+
+      '<div class="pm-disc"><div class="pm-dq">What does the CRA credit analysis look like, and has community development been consulted on the affordable unit structure?</div><div class="pm-dd">Executive Leadership &middot; Legal &amp; Compliance</div></div>'+
+    '</div>'+
+    '<div class="pm-fn">This brief was generated from assumptions entered into the ClearPath internal review platform. It does not represent an underwriting conclusion, credit opinion, or formal approval recommendation. All figures are scenario-based and subject to independent verification. For internal discussion use only. &nbsp;&middot;&nbsp; Generated via ClearPath &nbsp;&middot;&nbsp; '+date+'</div>';
+
+  document.getElementById('print-overlay').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+
+function closeExport(){
+  document.getElementById('print-overlay').classList.remove('show');
+  document.body.style.overflow='';
+}
+
+function closeModal(e){
+  if(e.target===document.getElementById('print-overlay')) closeExport();
+}
+
+function printBrief(){
+  var content=document.getElementById('brief-body').innerHTML;
+  var w=window.open('','_blank','width=900,height=700');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ClearPath Brief</title><style>');
+  w.document.write('*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#0a1628;padding:40px;max-width:780px;margin:0 auto;font-size:13px;line-height:1.65}');
+  w.document.write('.pm-logo{font-size:20px;font-weight:700;color:#0a1628;margin-bottom:2px}.pm-logo span{color:#0fa3b1}');
+  w.document.write('.pm-meta{font-size:11px;color:#6b8299;margin-bottom:18px;padding-bottom:14px;border-bottom:1.5px solid #0a1628;display:flex;justify-content:space-between}');
+  w.document.write('.pm-deal-title{font-size:17px;font-weight:700;color:#0a1628;margin-bottom:3px}.pm-deal-sub{font-size:12px;color:#6b8299;margin-bottom:18px}');
+  w.document.write('.pm-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:18px}');
+  w.document.write('.pm-m{background:#f4f9fd;padding:10px;border-radius:5px;text-align:center}.pm-ml{font-size:10px;color:#6b8299;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}.pm-mv{font-size:15px;font-weight:700;color:#0a1628}');
+  w.document.write('.pm-sect{margin-bottom:14px}.pm-sect-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b8299;font-weight:700;margin-bottom:6px;border-bottom:0.5px solid #dde3ea;padding-bottom:4px}');
+  w.document.write('.pm-interp{background:#f4f9fd;border-left:3px solid #1a7fbf;padding:10px 13px;font-size:12px;color:#3a5070;line-height:1.65;border-radius:0 5px 5px 0}');
+  w.document.write('.pm-li{display:flex;gap:8px;margin-bottom:6px;font-size:12px;color:#3a5070;line-height:1.6;align-items:flex-start}.pm-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0}');
+  w.document.write('.pm-disc{border:0.5px solid rgba(26,127,191,.2);border-radius:5px;padding:9px 11px;margin-bottom:6px;background:rgba(26,127,191,.03)}.pm-dq{font-size:12px;color:#0a1628;line-height:1.5}.pm-dd{font-size:10px;color:#1a7fbf;margin-top:3px;font-weight:700}');
+  w.document.write('.pm-fn{font-size:10px;color:#9aafbf;line-height:1.6;border-top:0.5px solid #dde3ea;padding-top:12px;margin-top:14px}');
+  w.document.write('@media print{body{padding:28px}@page{margin:0.6in}}');
+  w.document.write('</style></head><body>'+content+'</body></html>');
+  w.document.close();
+  setTimeout(function(){ w.focus(); w.print(); },350);
+}
+
+calc();
+</script>
+</body>
+</html>
